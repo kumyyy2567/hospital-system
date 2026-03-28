@@ -1,12 +1,18 @@
 from pathlib import Path
 import importlib.util
 import os
+from urllib.parse import urlparse
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 def env_list(name, default=''):
     return [item.strip() for item in os.environ.get(name, default).split(',') if item.strip()]
+
+
+def is_internal_railway_url(url):
+    hostname = (urlparse(url).hostname or '').strip().lower()
+    return hostname.endswith('.railway.internal')
 
 
 HAS_DJ_DATABASE_URL = importlib.util.find_spec('dj_database_url') is not None
@@ -23,6 +29,7 @@ DEBUG = os.environ.get('DJANGO_DEBUG', 'True').lower() == 'true'
 
 ALLOWED_HOSTS = env_list('DJANGO_ALLOWED_HOSTS', '127.0.0.1,localhost')
 RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME', '').strip()
+IS_RENDER = bool(RENDER_EXTERNAL_HOSTNAME or os.environ.get('RENDER') or os.environ.get('RENDER_SERVICE_ID'))
 if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 ALLOWED_HOSTS = list(dict.fromkeys(ALLOWED_HOSTS))
@@ -86,7 +93,8 @@ WSGI_APPLICATION = 'hospitalms.wsgi.application'
 ASGI_APPLICATION = 'hospitalms.asgi.application'
 
 DATABASE_URL = os.environ.get('DATABASE_URL', '').strip()
-if DATABASE_URL and HAS_DJ_DATABASE_URL:
+USE_DATABASE_URL = DATABASE_URL and HAS_DJ_DATABASE_URL and (IS_RENDER or not is_internal_railway_url(DATABASE_URL))
+if USE_DATABASE_URL:
     DATABASES = {
         'default': dj_database_url.parse(
             DATABASE_URL,
@@ -95,23 +103,23 @@ if DATABASE_URL and HAS_DJ_DATABASE_URL:
         )
     }
 else:
-    DB_ENGINE = os.environ.get('DB_ENGINE', 'mysql').strip().lower()
-    if DB_ENGINE == 'sqlite':
-        DATABASES = {
-            'default': {
-                'ENGINE': 'django.db.backends.sqlite3',
-                'NAME': BASE_DIR / 'db.sqlite3',
-            }
-        }
-    else:
+    DB_ENGINE = os.environ.get('DB_ENGINE', 'sqlite').strip().lower()
+    if DB_ENGINE == 'mysql':
         DATABASES = {
             'default': {
                 'ENGINE': 'django.db.backends.mysql',
                 'NAME': os.environ.get('DB_NAME', 'hospital_db'),
                 'USER': os.environ.get('DB_USER', 'root'),
-                'PASSWORD': os.environ.get('DB_PASSWORD', 'abhishek'),
+                'PASSWORD': os.environ.get('DB_PASSWORD', ''),
                 'HOST': os.environ.get('DB_HOST', 'localhost'),
                 'PORT': os.environ.get('DB_PORT', '3306'),
+            }
+        }
+    else:
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': BASE_DIR / 'db.sqlite3',
             }
         }
 
