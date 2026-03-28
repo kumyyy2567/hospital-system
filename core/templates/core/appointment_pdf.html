@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body>
+  <h2>Appointment Slip</h2>
+  <p>Appointment ID: APT-{{ appointment.id }}</p>
+  <p>Patient: {{ appointment.patient.get_full_name }}</p>
+  <p>Doctor: Dr. {{ appointment.doctor.get_full_name }}</p>
+  <p>Date & Time: {{ appointment.slot.date }} {{ appointment.slot.start_time }} - {{ appointment.slot.end_time }}</p>
+  <p>Status: {{ appointment.status }}</p>
+  {% if payment %}
+    <p>Payment Method: {{ payment.get_method_display }}</p>
+    <p>Payment Status: {{ payment.get_status_display }}</p>
+    <p>Total Amount: Rs. {{ payment.total_amount|floatformat:2 }}</p>
+    <p>Reference: {{ payment.transaction_reference }}</p>
+  {% endif %}
+</body>
+</html>

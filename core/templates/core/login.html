@@ -1,0 +1,16 @@
+{% extends 'core/base.html' %}
+{% block content %}
+  <div class="auth-wrap">
+    <div class="card auth-card reveal">
+      <span class="kicker">Welcome Back</span>
+      <h2>Sign In</h2>
+      <p>The owner signs in as admin, and customers sign in to access their hospital account.</p>
+      <form method="post">
+        {% csrf_token %}
+        <input class="form-control" name="username" placeholder="Username" required>
+        <input class="form-control" name="password" type="password" placeholder="Password" required>
+        <button class="btn" type="submit">Login</button>
+      </form>
+    </div>
+  </div>
+{% endblock %}

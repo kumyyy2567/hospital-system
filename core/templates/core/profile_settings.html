@@ -1,0 +1,15 @@
+{% extends 'core/base.html' %}
+{% block content %}
+  <h2>Profile Settings</h2>
+  {% if form %}
+  <div class="card" style="max-width: 560px;">
+    <form method="post">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button class="btn" type="submit">Update</button>
+    </form>
+  </div>
+  {% else %}
+    <p>Admins manage profile in Django admin.</p>
+  {% endif %}
+{% endblock %}

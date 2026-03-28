@@ -1,0 +1,430 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% block content %}
+  <div class="section-title">
+    <h2>Book Appointment</h2>
+    <p>Choose your doctor, secure a live slot, complete payment, and receive confirmation in one professional flow.</p>
+  </div>
+  <section class="booking-showcase card reveal" data-spotlight>
+    <div class="booking-showcase-copy">
+      <span class="kicker">Priority Care Booking</span>
+      <h3>Fast, secure, and more visual booking experience</h3>
+      <p>Review the doctor, timing, payment, and your final confirmation in one guided layout designed for phone and desktop.</p>
+      <div class="booking-showcase-points">
+        <span>Live slot sync</span>
+        <span>UPI QR payment</span>
+        <span>Instant ticket confirmation</span>
+      </div>
+    </div>
+    <div class="booking-showcase-media">
+      <img src="{% static 'core/img/doctor-booking.svg' %}" alt="Doctor booking illustration">
+    </div>
+  </section>
+  <section class="booking-smart-strip reveal" data-spotlight>
+    <div class="booking-smart-card">
+      <strong>Smart Search</strong>
+      <span>Doctor list filters instantly as the patient types.</span>
+    </div>
+    <div class="booking-smart-card">
+      <strong>Realtime Sync</strong>
+      <span>Slots refresh every 15 seconds to reduce double booking.</span>
+    </div>
+    <div class="booking-smart-card">
+      <strong>Guided Payment</strong>
+      <span>UPI QR flow opens before final confirmation.</span>
+    </div>
+  </section>
+  <div class="booking-hero-strip">
+    <div class="booking-hero-chip" data-spotlight>
+      <strong>{{ doctor_count }}</strong>
+      <span>Doctors on duty</span>
+    </div>
+    <div class="booking-hero-chip" data-spotlight>
+      <strong>{{ slot_count }}</strong>
+      <span>Live slots open</span>
+    </div>
+    <div class="booking-hero-chip" data-spotlight>
+      <strong>Rs. {{ booking_platform_fee|floatformat:0 }}</strong>
+      <span>Hospital booking fee</span>
+    </div>
+    <div class="booking-hero-chip" data-spotlight>
+      <strong>Live</strong>
+      <span>Auto-refresh enabled</span>
+    </div>
+  </div>
+  <div class="progress-steps">
+    <div class="progress-step" data-progress-step>
+      <strong>1. Select Doctor</strong>
+      <span>Pick from {{ doctor_count }} available doctors.</span>
+    </div>
+    <div class="progress-step" data-progress-step>
+      <strong>2. Choose Slot</strong>
+      <span>{{ slot_count }} open time slots are ready.</span>
+    </div>
+    <div class="progress-step" data-progress-step>
+      <strong>3. Choose Payment</strong>
+      <span>Select a secure payment route.</span>
+    </div>
+    <div class="progress-step" data-progress-step>
+      <strong>4. Confirm Email</strong>
+      <span>Confirmation goes directly to your inbox.</span>
+    </div>
+  </div>
+  <div
+    class="grid grid-2 booking-layout"
+    data-booking-shell
+    data-slots-url-template="{% url 'available_slots_api' 0 %}"
+    data-booking-platform-fee="{{ booking_platform_fee }}"
+    data-hospital-upi-id="{{ hospital_upi_id }}"
+    data-hospital-upi-payee="{{ hospital_upi_payee }}"
+  >
+    <div class="card reveal booking-form-card">
+      <form method="post" class="booking-form">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+          <div class="alert alert-error booking-errors-global" role="alert">
+            <strong>Booking Error:</strong> {{ form.non_field_errors|join:", " }}
+          </div>
+        {% endif %}
+        {% if messages %}
+          {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} booking-message" role="alert">
+              {{ message }}
+            </div>
+          {% endfor %}
+        {% endif %}
+
+        <section class="booking-stage">
+          <div class="booking-stage-header">
+            <div>
+              <h3>Choose your doctor</h3>
+              <p>Search by name or speciality, then tap a doctor card to continue.</p>
+            </div>
+            <span class="live-pill">Live doctor list</span>
+          </div>
+          <div class="booking-toolbar">
+            <input
+              type="search"
+              class="form-control booking-search"
+              placeholder="Search doctor or speciality"
+              data-booking-doctor-search
+            >
+            <div class="booking-toolbar-count" data-booking-search-count>{{ doctor_count }} doctors</div>
+          </div>
+          <div class="doctor-picker-grid" data-doctor-picker>
+            {% for doctor in doctor_cards %}
+              <button
+                type="button"
+                class="doctor-option"
+                data-doctor-card
+                data-spotlight
+                data-doctor-id="{{ doctor.id }}"
+                data-doctor-name="{{ doctor.name }}"
+                data-specialization="{{ doctor.specialization }}"
+                data-location="{{ doctor.location }}"
+                data-experience-label="{{ doctor.experience_label }}"
+                data-fee="{{ doctor.fee }}"
+                data-open-slots="{{ doctor.open_slots }}"
+                data-next-slot="{{ doctor.next_slot }}"
+                data-search="{{ doctor.search_text }}"
+              >
+                <span class="doctor-option-avatar">{{ doctor.initials }}</span>
+                <span class="doctor-option-content">
+                  <strong>Dr. {{ doctor.name }}</strong>
+                  <span>{{ doctor.specialization }} • {{ doctor.location }}</span>
+                  <span>{{ doctor.experience_label }}</span>
+                  <span class="doctor-option-next">{{ doctor.next_slot }}</span>
+                </span>
+                <span class="doctor-option-stats">
+                  <span>Fee</span>
+                  <strong>Rs. {{ doctor.fee|floatformat:0 }}</strong>
+                </span>
+                <span class="doctor-option-stats">
+                  <span>Open Slots</span>
+                  <strong>{{ doctor.open_slots }}</strong>
+                </span>
+              </button>
+            {% empty %}
+              <div class="booking-empty-state">
+                No doctors are available for online appointments right now.
+              </div>
+            {% endfor %}
+          </div>
+          <div class="booking-empty-state is-hidden" data-booking-doctor-empty>
+            No doctors match your search right now.
+          </div>
+          <div class="booking-field-errors">{{ form.doctor.errors }}</div>
+          <div class="booking-native-field">
+            {{ form.doctor.label_tag }}
+            {{ form.doctor }}
+          </div>
+        </section>
+
+        <section class="booking-stage">
+          <div class="booking-stage-header">
+            <div>
+              <h3>Pick a live slot</h3>
+              <p>Slots refresh automatically for the doctor you choose.</p>
+            </div>
+            <span class="live-pill">Real-time slot sync</span>
+          </div>
+          <div class="slot-picker-panel">
+            <div class="slot-picker-summary" data-slot-summary>
+              Choose a doctor to unlock live appointment slots.
+            </div>
+            <div class="slot-toolbar">
+              <div class="slot-filter-group">
+                <button type="button" class="slot-filter-chip is-active" data-slot-filter="ALL">All</button>
+                <button type="button" class="slot-filter-chip" data-slot-filter="MORNING">Morning</button>
+                <button type="button" class="slot-filter-chip" data-slot-filter="AFTERNOON">Afternoon</button>
+                <button type="button" class="slot-filter-chip" data-slot-filter="EVENING">Evening</button>
+              </div>
+              <div class="slot-sync-note" data-slot-sync-note>Waiting for slot sync</div>
+            </div>
+            <div class="slot-picker-grid" data-slot-options>
+              <div class="booking-empty-state">Choose a doctor to view time slots.</div>
+            </div>
+          </div>
+          <div class="booking-field-errors">{{ form.slot.errors }}</div>
+          <div class="booking-native-field">
+            {{ form.slot.label_tag }}
+            {{ form.slot }}
+          </div>
+        </section>
+
+        <section class="booking-stage">
+          <div class="booking-stage-header">
+            <div>
+              <h3>Choose your payment</h3>
+              <p>Online methods confirm instantly. You can also reserve now and pay at the hospital.</p>
+            </div>
+            <span class="live-pill">Secure payment routing</span>
+          </div>
+          <div class="payment-method-grid">
+            {% for method in payment_methods %}
+              <button
+                type="button"
+                class="payment-method-card {% if form.payment_method.value == method.value or not form.payment_method.value and method.value == 'UPI' %}is-selected{% endif %}"
+                data-payment-option
+                data-spotlight
+                data-payment-value="{{ method.value }}"
+                data-payment-title="{{ method.title }}"
+              >
+                <span class="payment-method-head">
+                  <strong>{{ method.title }}</strong>
+                  <span class="payment-method-badge">{{ method.badge }}</span>
+                </span>
+                <span>{{ method.note }}</span>
+              </button>
+            {% endfor %}
+          </div>
+          <div class="payment-breakdown">
+            <div class="payment-breakdown-row">
+              <span>Consultation Fee</span>
+              <strong data-breakdown-consultation-fee>Rs. 0</strong>
+            </div>
+            <div class="payment-breakdown-row">
+              <span>Hospital Booking Fee</span>
+              <strong data-breakdown-platform-fee>Rs. {{ booking_platform_fee|floatformat:0 }}</strong>
+            </div>
+            <div class="payment-breakdown-row total">
+              <span>Total Due</span>
+              <strong data-breakdown-total>Rs. {{ booking_platform_fee|floatformat:0 }}</strong>
+            </div>
+          </div>
+          <div class="payment-upi-panel" data-upi-panel>
+            <div class="payment-upi-row">
+              <span>UPI ID</span>
+              <button type="button" class="payment-upi-id-button" data-upi-id-trigger data-upi-id-display>{{ hospital_upi_id }}</button>
+            </div>
+            <div class="payment-upi-row">
+              <span>Payee</span>
+              <strong>{{ hospital_upi_payee }}</strong>
+            </div>
+            <div class="payment-upi-row">
+              <span>UPI Amount</span>
+              <strong data-upi-amount>Rs. {{ booking_platform_fee|floatformat:0 }}</strong>
+            </div>
+            <div class="action-row">
+              <a class="btn btn-outline" href="#" target="_blank" rel="noopener" data-upi-link>Open UPI App</a>
+              <button type="button" class="btn btn-outline" data-show-upi-qr>Show QR Code</button>
+              <button type="button" class="btn btn-outline" data-copy-upi>Copy UPI ID</button>
+            </div>
+          </div>
+          <div class="booking-inline-note" data-payment-feedback>
+            Select a payment method to continue with secure checkout.
+          </div>
+          <div class="booking-field-errors">{{ form.payment_method.errors }}</div>
+          <div class="booking-native-field">
+            {{ form.payment_method.label_tag }}
+            {{ form.payment_method }}
+          </div>
+        </section>
+
+        <section class="booking-stage">
+          <div class="booking-stage-header">
+            <div>
+              <h3>Confirm your Email</h3>
+              <p>We send your confirmation and appointment slip straight to your inbox.</p>
+            </div>
+          </div>
+          <div>
+            {{ form.gmail.label_tag }}
+            {{ form.gmail }}
+          </div>
+          <div class="booking-inline-note" data-gmail-feedback>
+Use an active email address to receive booking confirmation instantly.
+          </div>
+          <div class="booking-field-errors">{{ form.gmail.errors }}</div>
+        </section>
+
+        <button class="btn booking-submit" type="submit" data-booking-submit>Confirm Booking</button>
+      </form>
+    </div>
+    <div class="booking-side-stack">
+      <div class="card reveal summary-card booking-preview-card" data-spotlight>
+        <h3>Live Booking Preview</h3>
+        <div class="summary-list">
+          <div class="summary-item">
+            <span>Doctor</span>
+            <strong class="summary-value" data-preview-doctor>Not selected</strong>
+          </div>
+          <div class="summary-item">
+            <span>Location</span>
+            <strong class="summary-value" data-preview-location>Waiting for selection</strong>
+          </div>
+          <div class="summary-item">
+            <span>Speciality</span>
+            <strong class="summary-value" data-preview-specialization>Waiting for selection</strong>
+          </div>
+          <div class="summary-item">
+            <span>Experience</span>
+            <strong class="summary-value" data-preview-experience>Consultant details pending</strong>
+          </div>
+          <div class="summary-item">
+            <span>Consultation Fee</span>
+            <strong class="summary-value" data-preview-fee>Pending selection</strong>
+          </div>
+          <div class="summary-item">
+            <span>Booking Fee</span>
+            <strong class="summary-value" data-preview-platform-fee>Rs. {{ booking_platform_fee|floatformat:0 }}</strong>
+          </div>
+          <div class="summary-item">
+            <span>Total Due</span>
+            <strong class="summary-value" data-preview-total>Rs. {{ booking_platform_fee|floatformat:0 }}</strong>
+          </div>
+          <div class="summary-item">
+            <span>Next Opening</span>
+            <strong class="summary-value" data-preview-next>Choose a doctor first</strong>
+          </div>
+          <div class="summary-item">
+            <span>Slot</span>
+            <strong class="summary-value" data-preview-slot>Not selected</strong>
+          </div>
+          <div class="summary-item">
+            <span>Open Slots</span>
+            <strong class="summary-value" data-preview-open-slots>0 available</strong>
+          </div>
+          <div class="summary-item">
+            <span>Email</span>
+            <strong class="summary-value" data-preview-gmail>Not provided</strong>
+          </div>
+          <div class="summary-item">
+            <span>Payment Method</span>
+            <strong class="summary-value" data-preview-payment-method>Not selected</strong>
+          </div>
+          <div class="summary-item">
+            <span>Payment Status</span>
+            <strong class="summary-value" data-preview-payment-status>Awaiting method</strong>
+          </div>
+          <div class="summary-item">
+            <span>Status</span>
+            <strong class="summary-value" data-preview-readiness>Waiting for details</strong>
+          </div>
+        </div>
+        <p class="summary-hint" data-preview-note>
+          Select a doctor to start building your appointment summary.
+        </p>
+      </div>
+      <div class="card reveal" data-spotlight>
+        <h3>Booking Assurance</h3>
+        <div class="booking-insight-list">
+          <div class="booking-insight-item">
+            <strong>Live doctor search</strong>
+            <span>Doctor cards show speciality, location, fee, and the next open slot before you commit.</span>
+          </div>
+          <div class="booking-insight-item">
+            <strong>Time-of-day slot filters</strong>
+            <span>Switch between morning, afternoon, and evening slots to book faster during busy hours.</span>
+          </div>
+          <div class="booking-insight-item">
+            <strong>Secure payments</strong>
+            <span>Use UPI, card, or net banking for instant confirmation, or reserve first and pay at reception.</span>
+          </div>
+          <div class="booking-insight-item">
+            <strong>Instant records</strong>
+            <span>Your appointment slip and payment details become available in the appointments page right after booking.</span>
+          </div>
+        </div>
+        <div class="booking-trust-panel">
+          <div class="booking-trust-row">
+            <span>Accepted payments</span>
+            <strong>UPI • Cards • Net Banking • Hospital Desk</strong>
+          </div>
+          <div class="booking-trust-row">
+            <span>Availability sync</span>
+            <strong>Every 15 seconds</strong>
+          </div>
+          <div class="booking-trust-row">
+            <span>Confirmation delivery</span>
+            <strong>Email + patient dashboard</strong>
+          </div>
+        </div>
+        <p class="summary-hint">The preview updates live as soon as you change doctor, slot, payment method, or email.</p>
+      </div>
+    </div>
+  </div>
+  <div class="payment-qr-modal" data-upi-modal aria-hidden="true">
+    <div class="payment-qr-dialog">
+        <div class="payment-qr-header">
+          <div>
+            <h3>Scan and Pay</h3>
+            <p>Clicking the booking button opens this QR first. Pay here, then confirm to finish the appointment booking.</p>
+          </div>
+          <button type="button" class="payment-qr-close" aria-label="Close QR payment" data-upi-close>&times;</button>
+        </div>
+      <div class="payment-qr-body">
+        <div class="payment-qr-code-wrap">
+          <img class="payment-qr-image" alt="UPI payment QR code" data-upi-qr-image>
+        </div>
+        <div class="payment-qr-details">
+          <div class="payment-qr-row">
+            <span>UPI ID</span>
+            <strong data-upi-modal-id>{{ hospital_upi_id }}</strong>
+          </div>
+          <div class="payment-qr-row">
+            <span>Total Amount</span>
+            <strong data-upi-modal-total>Rs. {{ booking_platform_fee|floatformat:0 }}</strong>
+          </div>
+          <div class="payment-qr-row">
+            <span>Doctor</span>
+            <strong data-upi-modal-doctor>Not selected</strong>
+          </div>
+          <div class="payment-qr-row">
+            <span>Slot</span>
+            <strong data-upi-modal-slot>Not selected</strong>
+          </div>
+          <div class="payment-qr-row">
+            <span>Note</span>
+            <strong>The appointment is confirmed after you click the button below.</strong>
+          </div>
+        </div>
+      </div>
+      <div class="action-row">
+        <a class="btn btn-outline" href="#" target="_blank" rel="noopener" data-upi-modal-link>Open UPI App</a>
+        <button type="button" class="btn btn-outline" data-upi-close>Cancel</button>
+        <button type="button" class="btn" data-upi-confirm>Paid and Confirm Booking</button>
+      </div>
+    </div>
+  </div>
+{% endblock %}

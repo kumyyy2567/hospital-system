@@ -1,0 +1,24 @@
+{% extends 'core/base.html' %}
+{% block content %}
+  <div class="section-title">
+    <h2>Doctor Profiles</h2>
+    <p>Review each doctor profile, specialization, and fee structure.</p>
+  </div>
+  <div class="card reveal">
+    <div class="table-wrap">
+      <table class="table">
+        <tr><th>Name</th><th>Specialization</th><th>Location</th><th>Experience</th><th>Phone</th><th>Fee</th></tr>
+        {% for d in doctors %}
+        <tr>
+          <td>{{ d.user.get_full_name }}</td>
+          <td>{{ d.specialization }}</td>
+          <td>{{ d.location|default:"Main Hospital" }}</td>
+          <td>{% if d.experience_years %}{{ d.experience_years }} yrs{% else %}Consultant{% endif %}</td>
+          <td>{{ d.phone }}</td>
+          <td>₹ {{ d.fee }}</td>
+        </tr>
+        {% empty %}<tr><td colspan="6">No doctors</td></tr>{% endfor %}
+      </table>
+    </div>
+  </div>
+{% endblock %}

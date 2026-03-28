@@ -1,0 +1,15 @@
+{% extends 'core/base.html' %}
+{% block content %}
+  <div class="auth-wrap">
+    <div class="card auth-card reveal">
+      <span class="kicker">Start Here</span>
+      <h2>Create Customer Account</h2>
+      <p>Customers can sign up here and log in to book appointments, upload reports, and track hospital records.</p>
+      <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button class="btn" type="submit">Create Account</button>
+      </form>
+    </div>
+  </div>
+{% endblock %}

@@ -1,0 +1,137 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% block content %}
+  <div class="section-title">
+    <h2>Patient Dashboard</h2>
+    <p>Manage your consultations and book a doctor quickly from this dashboard.</p>
+    <span class="live-pill">Live sync enabled</span>
+  </div>
+  <section class="dashboard-hero card reveal" data-spotlight>
+    <div class="dashboard-hero-copy">
+      <span class="kicker">Patient Care Hub</span>
+      <h3>Appointments, updates, and reports in one responsive dashboard</h3>
+      <p>Use this page to book a doctor, track live consultation status, and access the most important patient actions without jumping between screens.</p>
+      <div class="action-row">
+        <a class="btn" href="{% url 'book_appointment' %}">Book Appointment</a>
+        <a class="btn btn-outline" href="{% url 'patient_appointments' %}">See My Tickets</a>
+      </div>
+    </div>
+    <div class="dashboard-hero-media">
+      <img src="{% static 'core/img/dashboard-care.svg' %}" alt="Patient dashboard care illustration">
+    </div>
+  </section>
+  <section class="dashboard-command-strip reveal" data-spotlight>
+    <div class="dashboard-command-card">
+      <strong>Book Faster</strong>
+      <span>Jump straight into live doctor booking from here.</span>
+    </div>
+    <div class="dashboard-command-card">
+      <strong>Track Tickets</strong>
+      <span>See booked, completed, and updated consultations quickly.</span>
+    </div>
+    <div class="dashboard-command-card">
+      <strong>Stay Updated</strong>
+      <span>Notifications and chat keep the patient informed.</span>
+    </div>
+  </section>
+  <div class="card reveal" style="margin-bottom: 20px;" data-spotlight>
+    <h3>Book a Doctor From Dashboard</h3>
+    <p>{{ available_doctor_count }} doctors are available with {{ available_slot_count }} open appointment slots right now.</p>
+    <div class="action-row">
+      <a class="btn" href="{% url 'book_appointment' %}">Open Full Booking Page</a>
+      <a class="btn btn-outline" href="{% url 'patient_appointments' %}">My Appointments</a>
+    </div>
+    <div class="doctor-picker-grid" style="margin-top: 18px;">
+      {% for doctor in featured_doctors %}
+        <a class="doctor-option" href="{% url 'book_appointment' %}?doctor={{ doctor.id }}" data-spotlight>
+          <span class="doctor-option-avatar">{{ doctor.initials }}</span>
+          <span class="doctor-option-content">
+            <strong>Dr. {{ doctor.name }}</strong>
+            <span>{{ doctor.specialization }} • {{ doctor.location }}</span>
+            <span>{{ doctor.experience_label }}</span>
+            <span class="doctor-option-next">{{ doctor.next_slot }}</span>
+          </span>
+          <span class="doctor-option-stats">
+            <span>Fee</span>
+            <strong>Rs. {{ doctor.fee|floatformat:0 }}</strong>
+          </span>
+          <span class="doctor-option-stats">
+            <span>Open Slots</span>
+            <strong>{{ doctor.open_slots }}</strong>
+          </span>
+        </a>
+      {% empty %}
+        <div class="booking-empty-state">No doctors are available for booking right now.</div>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="grid grid-3 metric-grid" data-live-dashboard>
+    <div class="card metric-card reveal" data-spotlight>
+      <div class="metric-label">Total Bookings</div>
+      <div class="metric-value" data-count="{{ patient_total_appointments }}" data-stat-key="patient_total_appointments">{{ patient_total_appointments }}</div>
+      <div class="metric-note">Appointments created from your account.</div>
+    </div>
+    <div class="card metric-card reveal" data-spotlight>
+      <div class="metric-label">Completed Visits</div>
+      <div class="metric-value" data-count="{{ patient_completed_visits }}" data-stat-key="patient_completed_visits">{{ patient_completed_visits }}</div>
+      <div class="metric-note">Consultations already finished by your doctor.</div>
+    </div>
+    <div class="card metric-card reveal" data-spotlight>
+      <div class="metric-label">Unread Alerts</div>
+      <div class="metric-value" data-count="{{ patient_notifications }}" data-stat-key="patient_notifications">{{ patient_notifications }}</div>
+      <div class="metric-note">Notifications waiting in your panel.</div>
+    </div>
+    <div class="card metric-card reveal" data-spotlight>
+      <div class="metric-label">Open Slots</div>
+      <div class="metric-value">{{ available_slot_count }}</div>
+      <div class="metric-note">Appointment times you can book right now.</div>
+    </div>
+  </div>
+  <div class="grid grid-2">
+    <div class="card reveal" data-spotlight>
+      <h3>Upcoming Appointments</h3>
+      <div class="table-wrap">
+        <table class="table">
+          <tr><th>Doctor</th><th>Status</th></tr>
+          {% for apt in appointments %}
+          <tr>
+            <td>{{ apt.doctor.get_full_name }}</td>
+            <td>
+              <span class="badge {% if apt.status == 'BOOKED' %}badge-booked{% elif apt.status == 'COMPLETED' %}badge-completed{% else %}badge-cancelled{% endif %}">
+                {{ apt.status }}
+              </span>
+            </td>
+          </tr>
+          {% empty %}<tr><td colspan="2">No appointments</td></tr>{% endfor %}
+        </table>
+      </div>
+      <a class="btn" href="{% url 'patient_appointments' %}">View All</a>
+    </div>
+    <div class="card reveal" data-spotlight>
+      <h3>Chat Box</h3>
+      <div
+        data-chat-widget
+        data-replies="Your appointment reminder has been noted.|Your latest report upload looks complete.|You can download your invoice from the appointments page."
+      >
+        <div class="chat-box" data-chat-messages>
+          <div class="chat-message">System: Appointment reminders appear here.</div>
+          <div class="chat-message staff">Assistant: Your reports are synced and secured.</div>
+        </div>
+        <div class="typing-indicator" data-chat-typing>Assistant is preparing a response...</div>
+        <div class="chat-compose">
+          <input class="form-control" placeholder="Type your question..." data-chat-input>
+          <button type="button" class="btn chat-send" data-chat-send>Send</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="grid grid-2" style="margin-top: 20px;">
+    <div class="card reveal" data-spotlight>
+      <h3>Quick Actions</h3>
+      <div class="action-row">
+        <a class="btn" href="{% url 'book_appointment' %}">Book Appointment</a>
+        <a class="btn btn-outline" href="{% url 'upload_report' %}">Upload Report</a>
+      </div>
+    </div>
+  </div>
+{% endblock %}

@@ -1,0 +1,11 @@
+{% extends 'core/base.html' %}
+{% block content %}
+  <h2>Add Prescription</h2>
+  <div class="card" style="max-width: 560px;">
+    <form method="post">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button class="btn" type="submit">Save</button>
+    </form>
+  </div>
+{% endblock %}

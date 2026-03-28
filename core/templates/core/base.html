@@ -1,0 +1,114 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hospital Management System</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Sora:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'core/css/style.css' %}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="{% static 'core/js/app.js' %}" defer></script>
+</head>
+<body
+  {% if user.is_authenticated %}
+    data-dashboard-stats-url="{% url 'dashboard_stats_api' %}"
+    data-notifications-api="{% url 'notifications_api' %}"
+    data-notifications-read-all-url="{% url 'notifications_mark_all_read_api' %}"
+    data-notification-read-url-template="{% url 'notification_read_api' 0 %}"
+  {% endif %}
+>
+  <div class="topbar">
+    <div class="container topbar-row">
+      <div class="topbar-pills">
+        <span class="topbar-pill">English</span>
+        <span class="topbar-pill">24/7 Appointment Helpline</span>
+        <span class="topbar-pill">International Care Desk</span>
+      </div>
+      <div class="topbar-contacts">
+        <span>Hospital Support</span>
+        <strong>Always available for bookings and care guidance</strong>
+      </div>
+    </div>
+  </div>
+
+  <div class="navbar hospital-nav">
+    <div class="container navbar-row">
+      <a href="{% url 'index' %}" class="brand">
+        <span class="brand-mark"></span>
+        HMS
+        <span>Hospital Care Network</span>
+      </a>
+      <button class="nav-toggle" type="button" aria-label="Toggle navigation" data-nav-toggle>
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <div class="nav-links" data-nav-menu>
+        <a href="{% url 'index' %}#home-about">About</a>
+        <a href="{% url 'index' %}#home-specialties">Specialities</a>
+        <a href="{% url 'index' %}#home-insurance">Insurance</a>
+        <a href="{% url 'index' %}#home-directory">Doctors</a>
+        {% if user.is_authenticated %}
+          <a href="{% url 'dashboard' %}">Dashboard</a>
+          {% if user.profile.role == 'ADMIN' %}
+            <a href="{% url 'manage_payments' %}">Payments</a>
+          {% endif %}
+          {% if user.profile.role == 'PATIENT' %}
+            <a href="{% url 'book_appointment' %}">Book Appointment</a>
+          {% endif %}
+          <a href="{% url 'notifications_panel' %}" class="nav-notification-link">
+            Notifications
+            <span class="nav-badge is-hidden" data-notification-count>0</span>
+          </a>
+          <a href="{% url 'profile_settings' %}">Profile</a>
+          <a href="{% url 'logout' %}">Logout</a>
+        {% else %}
+          <a href="{% url 'login' %}">Login</a>
+          <a href="{% url 'signup' %}">Signup</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="floating-rail">
+    <a class="floating-rail-action" href="{% if user.is_authenticated %}{% if user.profile.role == 'PATIENT' %}{% url 'book_appointment' %}{% else %}{% url 'dashboard' %}{% endif %}{% else %}{% url 'signup' %}{% endif %}">
+      Book Doctor Appointment
+    </a>
+    <a class="floating-rail-action secondary" href="{% url 'index' %}#callback-request-strip">Free Second Opinion</a>
+    <button class="floating-chat-trigger" type="button" data-support-toggle>Live Chat</button>
+  </div>
+
+  <aside class="support-drawer" data-support-drawer>
+    <div class="support-drawer-header">
+      <div>
+        <strong>Live Care Desk</strong>
+        <p>Fast help for appointments, insurance, and second opinions.</p>
+      </div>
+      <button type="button" class="support-drawer-close" data-support-close>&times;</button>
+    </div>
+    <div class="support-drawer-body">
+      <div class="support-message">Assistant: Tell us what you need and we will guide you to the right next step.</div>
+      <div class="support-message outgoing">Visitor: I need help choosing a specialist.</div>
+      <div class="support-message">Assistant: Use the live doctor directory or request a call back from the care team.</div>
+    </div>
+    <div class="support-drawer-actions">
+      <a class="btn" href="{% if user.is_authenticated %}{% if user.profile.role == 'PATIENT' %}{% url 'book_appointment' %}{% else %}{% url 'dashboard' %}{% endif %}{% else %}{% url 'signup' %}{% endif %}">Book Appointment</a>
+      <a class="btn btn-outline" href="{% url 'index' %}#callback-request-strip">Request Call Back</a>
+    </div>
+  </aside>
+
+  <main class="container page-shell">
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert" data-alert>
+          <span>{{ message }}</span>
+          <button type="button" class="alert-close" aria-label="Dismiss message" data-alert-close>&times;</button>
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

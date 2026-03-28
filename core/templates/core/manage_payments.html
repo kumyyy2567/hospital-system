@@ -1,0 +1,115 @@
+{% extends 'core/base.html' %}
+{% block content %}
+  <div class="section-title">
+    <h2>Payment Review Queue</h2>
+    <p>Review uploaded proofs, confirm successful payments, or send them back for correction.</p>
+  </div>
+
+  <div class="grid grid-4 toolbar-metrics">
+    <div class="card metric-card reveal">
+      <div class="metric-label">Pending</div>
+      <div class="metric-value">{{ status_totals.pending }}</div>
+      <div class="metric-note">Reserved but no proof uploaded yet.</div>
+    </div>
+    <div class="card metric-card reveal">
+      <div class="metric-label">Under Review</div>
+      <div class="metric-value">{{ status_totals.under_review }}</div>
+      <div class="metric-note">Ready for manual verification.</div>
+    </div>
+    <div class="card metric-card reveal">
+      <div class="metric-label">Paid</div>
+      <div class="metric-value">{{ status_totals.paid }}</div>
+      <div class="metric-note">Approved by the admin team.</div>
+    </div>
+    <div class="card metric-card reveal">
+      <div class="metric-label">Rejected</div>
+      <div class="metric-value">{{ status_totals.rejected }}</div>
+      <div class="metric-note">Needs new proof from the patient.</div>
+    </div>
+  </div>
+
+  <div class="card reveal" data-table-shell>
+    <div class="table-toolbar">
+      <form method="get" style="display: flex; gap: 10px; flex: 1 1 420px; flex-wrap: wrap;">
+        <input class="form-control" name="q" placeholder="Search patient, doctor, reference, or UTR" value="{{ request.GET.q }}" data-table-search style="flex: 1 1 240px; margin-bottom: 0;">
+        <select class="form-control" name="status" style="flex: 0 0 200px; margin-bottom: 0;">
+          <option value="">All statuses</option>
+          {% for value, label in payment_statuses %}
+            <option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-outline">Filter</button>
+      </form>
+    </div>
+
+    <div class="table-wrap">
+      <table class="table">
+        <tr><th>Appointment</th><th>Patient</th><th>Doctor</th><th>Payment</th><th>Proof</th><th>Review</th></tr>
+        {% for payment in payments %}
+          <tr data-row-search="{{ payment.appointment.patient.get_full_name }} {{ payment.appointment.doctor.get_full_name }} {{ payment.transaction_reference }} {{ payment.transaction_id }}" data-status="{{ payment.status }}">
+            <td>
+              <strong>APT-{{ payment.appointment.id }}</strong>
+              <div class="summary-hint">{{ payment.appointment.slot.date }} {{ payment.appointment.slot.start_time }}</div>
+            </td>
+            <td>
+              {{ payment.appointment.patient.get_full_name|default:payment.appointment.patient.username }}
+              <div class="summary-hint">{{ payment.appointment.patient.username }}</div>
+            </td>
+            <td>
+              Dr. {{ payment.appointment.doctor.get_full_name|default:payment.appointment.doctor.username }}
+              <div class="summary-hint">{{ payment.get_method_display }}</div>
+            </td>
+            <td>
+              <span class="payment-status payment-status-{{ payment.status|lower }}">{{ payment.get_status_display }}</span>
+              <div class="summary-hint">Rs. {{ payment.total_amount|floatformat:0 }}</div>
+              <div class="summary-hint">Ref: {{ payment.transaction_reference }}</div>
+              {% if payment.transaction_id %}
+                <div class="summary-hint">Txn: {{ payment.transaction_id }}</div>
+              {% endif %}
+            </td>
+            <td>
+              {% if payment.proof_file %}
+                <a class="btn btn-outline" href="{{ payment.proof_file.url }}" target="_blank">Open Proof</a>
+              {% else %}
+                <span class="summary-hint">No file uploaded yet</span>
+              {% endif %}
+              {% if payment.submitted_note %}
+                <div class="summary-hint">Patient note: {{ payment.submitted_note }}</div>
+              {% endif %}
+            </td>
+            <td>
+              <div class="table-actions-stack">
+                {% if payment.status != 'PAID' %}
+                  <form method="post" action="{% url 'verify_payment' payment.id %}" class="payment-review-form">
+                    {% csrf_token %}
+                    <textarea class="form-control" name="review_note" rows="2" placeholder="Optional admin note"></textarea>
+                    <button type="submit" class="btn">Mark Paid</button>
+                  </form>
+                {% else %}
+                  <div class="summary-hint">Verified {% if payment.verified_by %}by {{ payment.verified_by.get_full_name|default:payment.verified_by.username }}{% endif %}</div>
+                {% endif %}
+
+                {% if payment.status != 'PAID' %}
+                  <form method="post" action="{% url 'reject_payment' payment.id %}" class="payment-review-form">
+                    {% csrf_token %}
+                    <textarea class="form-control" name="review_note" rows="2" placeholder="Reason for rejection"></textarea>
+                    <button type="submit" class="btn btn-outline">Reject</button>
+                  </form>
+                {% elif payment.review_note %}
+                  <div class="summary-hint">Admin note: {{ payment.review_note }}</div>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="6">No payments found.</td></tr>
+        {% endfor %}
+      </table>
+    </div>
+
+    <div>
+      {% if payments.has_previous %}<a href="?page={{ payments.previous_page_number }}">Prev</a>{% endif %}
+      {% if payments.has_next %}<a href="?page={{ payments.next_page_number }}">Next</a>{% endif %}
+    </div>
+  </div>
+{% endblock %}

@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body>
+  <h2>Prescription</h2>
+  <p>Appointment ID: APT-{{ prescription.appointment.id }}</p>
+  <p>Patient: {{ prescription.appointment.patient.get_full_name }}</p>
+  <p>Doctor: Dr. {{ prescription.appointment.doctor.get_full_name }}</p>
+  <h4>Medicines</h4>
+  <p>{{ prescription.medicines }}</p>
+  <h4>Dosage</h4>
+  <p>{{ prescription.dosage }}</p>
+  <h4>Notes</h4>
+  <p>{{ prescription.notes }}</p>
+</body>
+</html>

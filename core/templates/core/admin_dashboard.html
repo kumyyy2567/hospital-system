@@ -1,0 +1,77 @@
+{% extends 'core/base.html' %}
+{% block content %}
+  <div class="section-title">
+    <h2>Admin Command Center</h2>
+    <p>Live visibility across appointments, doctors, patients, and hospital revenue.</p>
+    <span class="live-pill">Live sync enabled</span>
+  </div>
+  <div class="grid grid-3 metric-grid" data-live-dashboard>
+    <div class="card metric-card reveal">
+      <div class="metric-label">Total Patients</div>
+      <div class="metric-value" data-count="{{ total_patients }}" data-stat-key="total_patients">{{ total_patients }}</div>
+      <div class="metric-note">Registered patients in the system.</div>
+    </div>
+    <div class="card metric-card reveal">
+      <div class="metric-label">Total Doctors</div>
+      <div class="metric-value" data-count="{{ total_doctors }}" data-stat-key="total_doctors">{{ total_doctors }}</div>
+      <div class="metric-note">Active doctors available for booking.</div>
+    </div>
+    <div class="card metric-card reveal">
+      <div class="metric-label">Total Appointments</div>
+      <div class="metric-value" data-count="{{ total_appointments }}" data-stat-key="total_appointments">{{ total_appointments }}</div>
+      <div class="metric-note">All booked, completed, and cancelled visits.</div>
+    </div>
+    <div class="card metric-card reveal">
+      <div class="metric-label">Revenue Summary</div>
+      <div class="metric-value" data-count="{{ revenue_sum|floatformat:0 }}" data-prefix="Rs. " data-stat-key="revenue_sum">
+        Rs. {{ revenue_sum|floatformat:0 }}
+      </div>
+      <div class="metric-note">Combined doctor fees and service charges.</div>
+    </div>
+    <div class="card metric-card reveal">
+      <div class="metric-label">Payments Under Review</div>
+      <div class="metric-value">{{ payments_under_review_count }}</div>
+      <div class="metric-note">Proof uploads waiting for admin approval.</div>
+    </div>
+  </div>
+  <div class="grid grid-2" style="margin-top: 20px;">
+    <div
+      class="card reveal"
+      data-admin-chart
+      data-revenue="{{ revenue_sum|floatformat:0 }}"
+      data-booked="{{ booked_count }}"
+      data-completed="{{ completed_count }}"
+      data-cancelled="{{ cancelled_count }}"
+    >
+      <h3>Revenue Summary</h3>
+      <p>Switch between money flow and appointment health.</p>
+      <div class="chart-toolbar">
+        <button type="button" class="chart-toggle is-active" data-chart-view="revenue">Revenue</button>
+        <button type="button" class="chart-toggle" data-chart-view="status">Appointment Status</button>
+      </div>
+      <canvas id="revenueChart"></canvas>
+    </div>
+    <div class="card reveal">
+      <h3>Quick Actions</h3>
+      <div class="action-row">
+        <a class="btn" href="{% url 'manage_staff' %}">Manage Staff</a>
+        <a class="btn btn-outline" href="{% url 'manage_doctors' %}">Manage Doctors</a>
+        <a class="btn btn-outline" href="{% url 'manage_payments' %}">Review Payments</a>
+      </div>
+      <div
+        data-chat-widget
+        data-replies="Analytics remain stable today.|Staff coverage looks balanced for the current shift.|Follow up on cancelled appointments to improve conversion."
+      >
+        <div class="chat-box" style="margin-top: 14px;" data-chat-messages>
+        <div class="chat-message">Admin assistant: Analytics look healthy today.</div>
+        <div class="chat-message staff">Tip: Review appointments and staffing.</div>
+        </div>
+        <div class="typing-indicator" data-chat-typing>Assistant is typing...</div>
+        <div class="chat-compose">
+          <input class="form-control" placeholder="Ask for an admin insight..." data-chat-input>
+          <button type="button" class="btn chat-send" data-chat-send>Send</button>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends 'core/base.html' %}
+{% block content %}
+  <div class="section-title">
+    <h2>Doctor Appointments</h2>
+    <p>Search, filter, and update each consultation in a single queue.</p>
+  </div>
+  <div class="card reveal" data-table-shell>
+    <div class="table-toolbar">
+      <form method="get" style="display: flex; gap: 10px; flex: 1 1 320px; flex-wrap: wrap;">
+        <input class="form-control" name="q" placeholder="Search patient" value="{{ request.GET.q }}" data-table-search style="flex: 1 1 200px; margin-bottom: 0;">
+        <input class="form-control" name="status" placeholder="Server filter status" value="{{ request.GET.status }}" style="flex: 1 1 180px; margin-bottom: 0;">
+      </form>
+      <div class="filter-bar">
+        <button type="button" class="filter-chip is-active" data-status-filter="ALL">All</button>
+        <button type="button" class="filter-chip" data-status-filter="BOOKED">Booked</button>
+        <button type="button" class="filter-chip" data-status-filter="COMPLETED">Completed</button>
+        <button type="button" class="filter-chip" data-status-filter="CANCELLED">Cancelled</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table class="table">
+        <tr><th>Patient</th><th>Date</th><th>Status</th><th>Payment</th><th>Actions</th></tr>
+        {% for apt in appointments %}
+        <tr data-row-search="{{ apt.patient.get_full_name }} {{ apt.slot.date }} {{ apt.status }}" data-status="{{ apt.status }}">
+          <td>{{ apt.patient.get_full_name }}</td>
+          <td>{{ apt.slot.date }} {{ apt.slot.start_time }}</td>
+          <td>
+            <span class="badge {% if apt.status == 'BOOKED' %}badge-booked{% elif apt.status == 'COMPLETED' %}badge-completed{% else %}badge-cancelled{% endif %}">
+              {{ apt.status }}
+            </span>
+          </td>
+          <td>
+            {% if apt.payment_record %}
+              <span class="payment-status payment-status-{{ apt.payment_record.status|lower }}">{{ apt.payment_record.get_status_display }}</span>
+              <div class="summary-hint">{{ apt.payment_record.get_method_display }} • Rs. {{ apt.payment_record.total_amount|floatformat:0 }}</div>
+            {% else %}
+              -
+            {% endif %}
+          </td>
+          <td>
+            <div class="action-row">
+              <a class="btn btn-outline" href="{% url 'add_medical_record' apt.patient.id %}">Record</a>
+              <a class="btn btn-outline" href="{% url 'add_prescription' apt.id %}">Prescription</a>
+              <a class="btn btn-outline" href="{% url 'create_invoice' apt.id %}">Invoice</a>
+              <button type="button" class="btn btn-outline" data-status-action data-url="{% url 'update_appointment_status' apt.id 'COMPLETED' %}" data-next-status="COMPLETED">Complete</button>
+              <button type="button" class="btn btn-outline" data-status-action data-url="{% url 'update_appointment_status' apt.id 'CANCELLED' %}" data-next-status="CANCELLED">Cancel</button>
+            </div>
+          </td>
+        </tr>
+        {% empty %}<tr><td colspan="5">No appointments</td></tr>{% endfor %}
+      </table>
+    </div>
+    <div>
+      {% if appointments.has_previous %}<a href="?page={{ appointments.previous_page_number }}">Prev</a>{% endif %}
+      {% if appointments.has_next %}<a href="?page={{ appointments.next_page_number }}">Next</a>{% endif %}
+    </div>
+  </div>
+{% endblock %}

@@ -1,0 +1,67 @@
+{% extends 'core/base.html' %}
+{% block content %}
+  <div class="section-title">
+    <h2>Upload Payment Proof</h2>
+    <p>Share your screenshot and transaction ID so the admin team can verify your booking quickly.</p>
+  </div>
+
+  <div class="grid grid-2 proof-grid">
+    <div class="card reveal proof-card">
+      <h3>Appointment Summary</h3>
+      <div class="detail-list">
+        <div><strong>Appointment ID:</strong> APT-{{ appointment.id }}</div>
+        <div><strong>Doctor:</strong> Dr. {{ appointment.doctor.get_full_name }}</div>
+        <div><strong>Date:</strong> {{ appointment.slot.date }}</div>
+        <div><strong>Time:</strong> {{ appointment.slot.start_time }} - {{ appointment.slot.end_time }}</div>
+        <div><strong>Payment Method:</strong> {{ payment.get_method_display }}</div>
+        <div><strong>Amount:</strong> Rs. {{ payment.total_amount|floatformat:0 }}</div>
+        <div><strong>Reference:</strong> {{ payment.transaction_reference }}</div>
+        <div><strong>UPI ID:</strong> {{ hospital_upi_id }}</div>
+      </div>
+
+      {% if payment.proof_file %}
+        <div class="note-banner" style="margin-top: 18px;">
+          <strong>Existing proof found.</strong>
+          <span>You can replace it with a clearer screenshot if needed.</span>
+          <a class="subtle-link" href="{{ payment.proof_file.url }}" target="_blank">Open current file</a>
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="card reveal proof-card">
+      <h3>Submit Payment Details</h3>
+      <p>Use a clear screenshot from PhonePe, GPay, Paytm, SBI, or your banking app.</p>
+      <form method="post" enctype="multipart/form-data" class="stack-form">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+          <div class="alert">
+            <span>{{ form.non_field_errors }}</span>
+          </div>
+        {% endif %}
+
+        <label for="{{ form.transaction_id.id_for_label }}">{{ form.transaction_id.label }}</label>
+        {{ form.transaction_id }}
+        {% if form.transaction_id.errors %}
+          <div class="field-error">{{ form.transaction_id.errors|join:', ' }}</div>
+        {% endif %}
+
+        <label for="{{ form.proof_file.id_for_label }}">{{ form.proof_file.label }}</label>
+        {{ form.proof_file }}
+        {% if form.proof_file.errors %}
+          <div class="field-error">{{ form.proof_file.errors|join:', ' }}</div>
+        {% endif %}
+
+        <label for="{{ form.submitted_note.id_for_label }}">{{ form.submitted_note.label }}</label>
+        {{ form.submitted_note }}
+        {% if form.submitted_note.errors %}
+          <div class="field-error">{{ form.submitted_note.errors|join:', ' }}</div>
+        {% endif %}
+
+        <div class="action-row" style="margin-top: 18px;">
+          <button type="submit" class="btn">Submit For Verification</button>
+          <a class="btn btn-outline" href="{% url 'patient_appointments' %}">Back to Appointments</a>
+        </div>
+      </form>
+    </div>
+  </div>
+{% endblock %}

@@ -1,0 +1,80 @@
+{% extends 'core/base.html' %}
+{% block content %}
+  <div class="section-title">
+    <h2>Doctor Dashboard</h2>
+    <p>Track consultations, update records, and keep your slot calendar optimized.</p>
+    <span class="live-pill">Live sync enabled</span>
+  </div>
+  <div class="grid grid-3 metric-grid" data-live-dashboard>
+    <div class="card metric-card reveal">
+      <div class="metric-label">Your Appointments</div>
+      <div class="metric-value" data-count="{{ doctor_total_appointments }}" data-stat-key="doctor_total_appointments">{{ doctor_total_appointments }}</div>
+      <div class="metric-note">Total patient visits scheduled under your profile.</div>
+    </div>
+    <div class="card metric-card reveal">
+      <div class="metric-label">Completed Visits</div>
+      <div class="metric-value" data-count="{{ doctor_completed_appointments }}" data-stat-key="doctor_completed_appointments">{{ doctor_completed_appointments }}</div>
+      <div class="metric-note">Consultations successfully closed.</div>
+    </div>
+    <div class="card metric-card reveal">
+      <div class="metric-label">Open Slots</div>
+      <div class="metric-value" data-count="{{ doctor_open_slots }}" data-stat-key="doctor_open_slots">{{ doctor_open_slots }}</div>
+      <div class="metric-note">Availability currently visible to patients.</div>
+    </div>
+  </div>
+  <div class="grid grid-2">
+    <div class="card reveal">
+      <h3>Recent Appointments</h3>
+      <div class="table-wrap">
+        <table class="table">
+          <tr><th>Patient</th><th>Status</th></tr>
+          {% for apt in appointments %}
+          <tr>
+            <td>{{ apt.patient.get_full_name }}</td>
+            <td>
+              <span class="badge {% if apt.status == 'BOOKED' %}badge-booked{% elif apt.status == 'COMPLETED' %}badge-completed{% else %}badge-cancelled{% endif %}">
+                {{ apt.status }}
+              </span>
+            </td>
+          </tr>
+          {% empty %}<tr><td colspan="2">No appointments</td></tr>{% endfor %}
+        </table>
+      </div>
+      <a class="btn" href="{% url 'doctor_appointments' %}">View All</a>
+    </div>
+    <div class="card reveal">
+      <h3>Quick Chat</h3>
+      <div
+        data-chat-widget
+        data-replies="Please remember to take your medicines on time.|I have added that note to your follow-up plan.|Your appointment instructions are ready."
+      >
+        <div class="chat-box" data-chat-messages>
+          <div class="chat-message">Patient: Thank you doctor!</div>
+          <div class="chat-message staff">You: You are welcome. Please take rest.</div>
+        </div>
+        <div class="typing-indicator" data-chat-typing>Assistant is drafting a reply...</div>
+        <div class="chat-compose">
+          <input class="form-control" placeholder="Send a quick response..." data-chat-input>
+          <button type="button" class="btn chat-send" data-chat-send>Send</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="grid grid-2" style="margin-top: 20px;">
+    <div class="card reveal">
+      <h3>Availability</h3>
+      <div class="action-row">
+        <a class="btn" href="{% url 'availability_list' %}">View Slots</a>
+        <a class="btn btn-outline" href="{% url 'availability_create' %}">Add Slot</a>
+      </div>
+    </div>
+    <div class="card reveal">
+      <h3>Records</h3>
+      <ul class="list-clean">
+        {% for rec in records %}
+        <li>{{ rec.patient.get_full_name }} - {{ rec.created_at|date:"M d, Y" }}</li>
+        {% empty %}<li>No records yet</li>{% endfor %}
+      </ul>
+    </div>
+  </div>
+{% endblock %}

@@ -1,0 +1,302 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% block content %}
+  <div
+    class="home-shell"
+    data-home-live-url="{% url 'home_live_api' %}"
+    data-home-doctors-url="{% url 'doctor_directory_api' %}"
+    data-callback-url="{% url 'callback_request_api' %}"
+    data-patient-book-url="{% url 'book_appointment' %}"
+    data-signup-url="{% url 'signup' %}"
+    data-can-book="{% if user.is_authenticated and user.profile.role == 'PATIENT' %}true{% else %}false{% endif %}"
+  >
+    <section class="callback-strip card reveal" id="callback-request-strip" data-spotlight>
+      <div class="callback-strip-title">
+        <span class="kicker">Care Support</span>
+        <h2>Get a Call Back</h2>
+        <p>Share your details and our hospital care desk will contact you for appointments, insurance guidance, or a second opinion.</p>
+      </div>
+      <form class="callback-form" data-callback-form>
+        {% csrf_token %}
+        <input type="text" name="full_name" placeholder="Full Name*" required>
+        <input type="tel" name="phone_number" placeholder="Phone Number*" required>
+        <select name="service_type">
+          {% for value, label in callback_form.fields.service_type.choices %}
+            <option value="{{ value }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+        <button class="btn callback-submit" type="submit">Submit</button>
+      </form>
+      <div class="callback-feedback summary-hint" data-callback-feedback></div>
+    </section>
+
+    <section class="finder-hero card reveal" data-spotlight>
+      <div class="finder-copy">
+        <span class="kicker">Live Doctor Finder</span>
+        <h1>Let’s Find the Right Doctor</h1>
+        <p>Search our hospital network, discover live specialist availability, and move from enquiry to confirmed appointment in one flow.</p>
+        <div class="finder-locations">
+          {% for location in hospital_locations %}
+            <span class="finder-location">{{ location }}</span>
+          {% endfor %}
+        </div>
+        <div class="finder-stats">
+          <div class="finder-stat">
+            <strong data-home-stat-key="total_doctors">{{ home_stats.total_doctors }}</strong>
+            <span>Doctors</span>
+          </div>
+          <div class="finder-stat">
+            <strong data-home-stat-key="open_slots">{{ home_stats.open_slots }}</strong>
+            <span>Open Slots</span>
+          </div>
+          <div class="finder-stat">
+            <strong data-home-stat-key="total_appointments">{{ home_stats.total_appointments }}</strong>
+            <span>Appointments</span>
+          </div>
+        </div>
+      </div>
+      <div class="finder-visual">
+        <div class="finder-orbit orbit-a"></div>
+        <div class="finder-orbit orbit-b"></div>
+        <div class="finder-image-card">
+          <img src="{% static 'core/img/hospital-hero.svg' %}" alt="Hospital and doctor care illustration">
+        </div>
+        <div class="finder-panel">
+          <h3>Today’s Live Snapshot</h3>
+          <div class="finder-panel-item">
+            <span>Registered Patients</span>
+            <strong data-home-stat-key="total_patients">{{ home_stats.total_patients }}</strong>
+          </div>
+          <div class="finder-panel-item">
+            <span>Callback Requests</span>
+            <strong data-home-stat-key="callback_requests">{{ home_stats.callback_requests }}</strong>
+          </div>
+          <div class="finder-panel-item">
+            <span>Realtime Sync</span>
+            <strong>Active</strong>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="experience-band reveal" data-spotlight>
+      <div class="experience-band-copy">
+        <span class="kicker">Why This Feels Better</span>
+        <h2>Designed like a modern care platform, not a basic form page</h2>
+      </div>
+      <div class="experience-marquee" aria-label="Hospital highlights">
+        <div class="experience-marquee-track">
+          <span>Live Specialist Directory</span>
+          <span>Realtime Slot Sync</span>
+          <span>UPI QR Booking</span>
+          <span>Instant Ticket Confirmation</span>
+          <span>Insurance Support</span>
+          <span>Second Opinion Desk</span>
+          <span>Live Specialist Directory</span>
+          <span>Realtime Slot Sync</span>
+          <span>UPI QR Booking</span>
+          <span>Instant Ticket Confirmation</span>
+          <span>Insurance Support</span>
+          <span>Second Opinion Desk</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="quick-actions-grid">
+      <a class="quick-action-card reveal" href="{% if user.is_authenticated and user.profile.role == 'PATIENT' %}{% url 'book_appointment' %}{% else %}{% url 'signup' %}{% endif %}" data-spotlight>
+        <div class="quick-action-icon">AP</div>
+        <h3>Book Appointment</h3>
+        <p>Move from doctor discovery to confirmed slot in minutes.</p>
+      </a>
+      <a class="quick-action-card reveal" href="#home-specialties" data-spotlight>
+        <div class="quick-action-icon">SP</div>
+        <h3>Our Specialities</h3>
+        <p>Explore the strongest teams currently active in the system.</p>
+      </a>
+      <a class="quick-action-card reveal" href="#home-directory" data-spotlight>
+        <div class="quick-action-icon">LC</div>
+        <h3>Our Locations</h3>
+        <p>See which centers and doctors are closest to the patient.</p>
+      </a>
+      <a class="quick-action-card reveal" href="#home-directory" data-spotlight>
+        <div class="quick-action-icon">DR</div>
+        <h3>Our Doctors</h3>
+        <p>View live doctor cards with fees, slots, and experience.</p>
+      </a>
+      <a class="quick-action-card reveal" href="{% if user.is_authenticated %}{% url 'patient_appointments' %}{% else %}{% url 'login' %}{% endif %}" data-spotlight>
+        <div class="quick-action-icon">MR</div>
+        <h3>View Medical Records</h3>
+        <p>Track confirmed tickets, PDFs, reports, and invoices easily.</p>
+      </a>
+      <a class="quick-action-card reveal" href="#callback-request-strip" data-spotlight>
+        <div class="quick-action-icon">SO</div>
+        <h3>Free Second Opinion</h3>
+        <p>Request guidance fast when the patient needs a next step.</p>
+      </a>
+    </section>
+
+    <section class="specialty-section reveal" id="home-specialties">
+      <div class="section-title section-title-split">
+        <div>
+          <h2>Our Specialities</h2>
+          <p>Specialty cards update from the live doctor directory, so this section reflects the actual teams in your system.</p>
+        </div>
+        <a class="btn btn-outline" href="#home-directory">View all</a>
+      </div>
+      <div class="specialty-carousel" data-specialty-carousel>
+        <div class="specialty-track" data-specialty-track>
+          {% for specialty in specialty_summaries %}
+            <button type="button" class="specialty-card {% if forloop.first %}is-active{% endif %}" data-home-specialty data-specialty-name="{{ specialty.name }}" data-spotlight>
+              <div class="specialty-icon">{{ specialty.name|slice:":2"|upper }}</div>
+              <strong>{{ specialty.name }}</strong>
+              <span>{{ specialty.total_doctors }} doctors</span>
+            </button>
+          {% endfor %}
+        </div>
+        <div class="specialty-dots">
+          {% for specialty in specialty_summaries %}
+            <span class="specialty-dot {% if forloop.first %}is-active{% endif %}" data-specialty-dot></span>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+
+    <section class="about-section" id="home-about">
+      <div class="about-copy card reveal" data-spotlight>
+        <span class="kicker">About</span>
+        <h2>Built for Hospital Operations That Need to Move Fast</h2>
+        <p>This platform brings hospital bookings, doctor scheduling, prescriptions, invoices, medical records, and notifications into one secure system with real-time refresh.</p>
+        <p>Patients can sign up and book, doctors can manage consultations, and the owner stays in control from the admin command center.</p>
+      </div>
+      <div class="about-visual card reveal" data-spotlight>
+        <div class="about-visual-glow"></div>
+        <img class="about-visual-illustration" src="{% static 'core/img/dashboard-care.svg' %}" alt="Digital care dashboard illustration">
+        <div class="about-visual-card">
+          <span>Hospital Experience Layer</span>
+          <strong>Faster booking. Cleaner records. Better communication.</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="care-journey-grid">
+      <article class="care-journey-card card reveal" data-spotlight>
+        <span class="care-step">01</span>
+        <h3>Discover</h3>
+        <p>Search specialities, scan doctor cards, and compare live openings before choosing.</p>
+      </article>
+      <article class="care-journey-card card reveal" data-spotlight>
+        <span class="care-step">02</span>
+        <h3>Book</h3>
+        <p>Reserve a slot with UPI QR, card, or desk payment through a guided booking flow.</p>
+      </article>
+      <article class="care-journey-card card reveal" data-spotlight>
+        <span class="care-step">03</span>
+        <h3>Track</h3>
+        <p>Open the patient dashboard to follow ticket status, payment state, and documents.</p>
+      </article>
+    </section>
+
+    <section class="insurance-section card reveal" id="home-insurance" data-spotlight>
+      <div class="insurance-visual">
+        <div class="insurance-photo-card">
+          <div class="insurance-photo-badge">Insurance Desk</div>
+          <div class="insurance-photo-scene"></div>
+        </div>
+      </div>
+      <div class="insurance-copy">
+        <span class="kicker">Insurance Coverage</span>
+        <h2>Insurance and TPA Support</h2>
+        <p>Medical support can turn urgent quickly. This section gives patients a familiar hospital-style insurance experience while still staying connected to your live system.</p>
+        <a class="btn btn-outline" href="#callback-request-strip">Enquire Now</a>
+        <div class="insurance-groups">
+          <div>
+            <h3>Third Party Administrators</h3>
+            <div class="logo-grid">
+              {% for partner in tpa_partners %}
+                <div class="logo-chip">{{ partner }}</div>
+              {% endfor %}
+            </div>
+          </div>
+          <div>
+            <h3>Insurance Companies</h3>
+            <div class="logo-grid">
+              {% for company in insurance_companies %}
+                <div class="logo-chip">{{ company }}</div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="directory-section card reveal" id="home-directory" data-spotlight>
+      <div class="section-title section-title-split">
+        <div>
+          <span class="kicker">Realtime Directory</span>
+          <h2>Live Doctor Directory</h2>
+          <p>Filter by speciality and refresh the visible doctor list without reloading the page.</p>
+        </div>
+        <span class="live-pill">Realtime directory refresh</span>
+      </div>
+      <div class="directory-toolbar">
+        <div class="filter-bar" data-directory-filters>
+          <button type="button" class="filter-chip is-active" data-directory-specialty="ALL">All</button>
+          {% for specialty in specialty_summaries %}
+            <button type="button" class="filter-chip" data-directory-specialty="{{ specialty.name }}">{{ specialty.name }}</button>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="doctor-directory-grid" data-home-directory>
+        {% for doctor in featured_doctors %}
+          <article class="doctor-directory-card" data-spotlight>
+            <div class="doctor-directory-head">
+              <div class="doctor-avatar">{{ doctor.name|slice:":2"|upper }}</div>
+              <div>
+                <h3>{{ doctor.name }}</h3>
+                <p>{{ doctor.specialization }} • {{ doctor.location }}</p>
+              </div>
+            </div>
+            <div class="doctor-directory-meta">
+              <span>Experience</span>
+              <strong>{{ doctor.experience_label }}</strong>
+            </div>
+            <div class="doctor-directory-meta">
+              <span>Fee</span>
+              <strong>Rs. {{ doctor.fee|floatformat:0 }}</strong>
+            </div>
+            <div class="doctor-directory-meta">
+              <span>Open Slots</span>
+              <strong>{{ doctor.open_slots }}</strong>
+            </div>
+            <div class="doctor-directory-meta">
+              <span>Next Slot</span>
+              <strong>{{ doctor.next_slot }}</strong>
+            </div>
+            <div class="doctor-directory-actions">
+              <a class="btn" href="{% if user.is_authenticated and user.profile.role == 'PATIENT' %}{% url 'book_appointment' %}?doctor={{ doctor.id }}{% else %}{% url 'signup' %}{% endif %}">
+                Book Now
+              </a>
+            </div>
+          </article>
+        {% empty %}
+          <div class="notification-empty">No doctors added yet. Add doctor profiles to populate the live directory.</div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="mega-footer card reveal">
+      <div class="mega-footer-grid">
+        {% for group in footer_groups %}
+          <div class="mega-footer-column">
+            <h3>{{ group.title }}</h3>
+            <ul>
+              {% for item in group.items %}
+                <li><a href="#">{{ item }}</a></li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% endfor %}
+      </div>
+    </section>
+  </div>
+{% endblock %}

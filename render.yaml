@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: hospital-management-system
+    env: python
+    buildCommand: "bash build.sh"
+    startCommand: "gunicorn hospitalms.wsgi:application --log-file -"
+    autoDeploy: true
+    envVars:
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DJANGO_DEBUG
+        value: "False"
+      - key: DJANGO_ALLOWED_HOSTS
+        value: "127.0.0.1,localhost"
+      - key: DJANGO_CSRF_TRUSTED_ORIGINS
+        value: "http://127.0.0.1,http://localhost"
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: hospital-management-db
+          property: connectionString
+
+databases:
+  - name: hospital-management-db
+    databaseName: hospital_db
+    user: hospital_user

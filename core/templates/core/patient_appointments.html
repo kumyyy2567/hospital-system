@@ -1,0 +1,122 @@
+{% extends 'core/base.html' %}
+{% block content %}
+  <div class="section-title">
+    <h2>Your Appointments</h2>
+    <p>Track every booking and download slips, invoices, and prescriptions instantly.</p>
+  </div>
+  {% if booked_appointment %}
+    <div class="card reveal booking-success-card">
+      <div class="booking-success-head">
+        <div>
+          <span class="booking-success-kicker">Ticket Booked</span>
+          <h3>Appointment APT-{{ booked_appointment.id }} is confirmed</h3>
+          <p>Your booking has been saved successfully and your ticket is now visible below.</p>
+        </div>
+        <span class="payment-status payment-status-{{ booked_appointment.payment_record.status|lower }}">
+          {{ booked_appointment.payment_record.get_status_display }}
+        </span>
+      </div>
+      <div class="booking-success-grid">
+        <div><span>Doctor</span><strong>Dr. {{ booked_appointment.doctor.get_full_name }}</strong></div>
+        <div><span>Date</span><strong>{{ booked_appointment.slot.date }}</strong></div>
+        <div><span>Time</span><strong>{{ booked_appointment.slot.start_time }} - {{ booked_appointment.slot.end_time }}</strong></div>
+        <div><span>Payment</span><strong>{{ booked_appointment.payment_record.get_method_display }}</strong></div>
+      </div>
+      <div class="action-row">
+        <a class="btn" href="{% url 'appointment_pdf' booked_appointment.id %}">Download Ticket PDF</a>
+      </div>
+    </div>
+  {% endif %}
+  <div class="card reveal" data-table-shell>
+    <div class="table-toolbar">
+      <form method="get" style="flex: 1 1 260px;">
+        <input class="form-control" name="q" placeholder="Search doctor" value="{{ request.GET.q }}" data-table-search>
+      </form>
+      <div class="filter-bar">
+        <button type="button" class="filter-chip is-active" data-status-filter="ALL">All</button>
+        <button type="button" class="filter-chip" data-status-filter="BOOKED">Booked</button>
+        <button type="button" class="filter-chip" data-status-filter="COMPLETED">Completed</button>
+        <button type="button" class="filter-chip" data-status-filter="CANCELLED">Cancelled</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table class="table">
+        <tr><th>Doctor</th><th>Date</th><th>Status</th><th>Payment</th><th>Amount</th><th>Action</th><th>Slip</th><th>Invoice</th><th>Prescription</th></tr>
+        {% for apt in appointments %}
+        <tr data-row-search="{{ apt.doctor.get_full_name }} {{ apt.slot.date }} {{ apt.status }}" data-status="{{ apt.status }}" {% if booked_appointment and booked_appointment.id == apt.id %}class="is-booking-highlight"{% endif %}>
+          <td>{{ apt.doctor.get_full_name }}</td>
+          <td>{{ apt.slot.date }} {{ apt.slot.start_time }}</td>
+          <td>
+            <span class="badge {% if apt.status == 'BOOKED' %}badge-booked{% elif apt.status == 'COMPLETED' %}badge-completed{% else %}badge-cancelled{% endif %}">
+              {{ apt.status }}
+            </span>
+          </td>
+          <td>
+            {% if apt.payment_record %}
+              <span class="payment-status payment-status-{{ apt.payment_record.status|lower }}">{{ apt.payment_record.get_status_display }}</span>
+              <div class="summary-hint">{{ apt.payment_record.get_method_display }}</div>
+              {% if apt.payment_record.transaction_id %}
+                <div class="summary-hint">Txn: {{ apt.payment_record.transaction_id }}</div>
+              {% endif %}
+              {% if apt.payment_record.review_note %}
+                <div class="summary-hint">Admin note: {{ apt.payment_record.review_note }}</div>
+              {% endif %}
+            {% else %}
+              -
+            {% endif %}
+          </td>
+          <td>
+            {% if apt.payment_record %}
+              Rs. {{ apt.payment_record.total_amount|floatformat:0 }}
+            {% else %}
+              -
+            {% endif %}
+          </td>
+          <td>
+            {% if apt.payment_record %}
+              {% if apt.payment_record.method == 'PAY_AT_HOSPITAL' %}
+                <span class="summary-hint">Pay at reception</span>
+              {% elif apt.payment_record.status == 'PAID' %}
+                <span class="summary-hint">Booking confirmed</span>
+                {% if apt.payment_record.proof_file %}
+                  <div><a class="subtle-link" href="{{ apt.payment_record.proof_file.url }}" target="_blank">View proof</a></div>
+                {% endif %}
+              {% elif apt.payment_record.status == 'UNDER_REVIEW' %}
+                <span class="summary-hint">Awaiting admin approval</span>
+                {% if apt.payment_record.proof_file %}
+                  <div><a class="subtle-link" href="{{ apt.payment_record.proof_file.url }}" target="_blank">View proof</a></div>
+                {% endif %}
+              {% else %}
+                <a class="btn btn-outline" href="{% url 'payment_proof_upload' apt.payment_record.id %}">
+                  {% if apt.payment_record.status == 'REJECTED' %}Upload Again{% else %}Upload Proof{% endif %}
+                </a>
+              {% endif %}
+            {% else %}
+              -
+            {% endif %}
+          </td>
+          <td><a class="btn btn-outline" href="{% url 'appointment_pdf' apt.id %}">PDF</a></td>
+          <td>
+            {% if apt.invoice %}
+              <a class="btn btn-outline" href="{% url 'invoice_pdf' apt.invoice.id %}">PDF</a>
+            {% else %}
+              -
+            {% endif %}
+          </td>
+          <td>
+            {% for pres in apt.prescriptions.all %}
+              <a class="btn btn-outline" href="{% url 'prescription_pdf' pres.id %}">PDF</a>
+            {% empty %}
+              -
+            {% endfor %}
+          </td>
+        </tr>
+        {% empty %}<tr><td colspan="9">No appointments</td></tr>{% endfor %}
+      </table>
+    </div>
+    <div>
+      {% if appointments.has_previous %}<a href="?page={{ appointments.previous_page_number }}">Prev</a>{% endif %}
+      {% if appointments.has_next %}<a href="?page={{ appointments.next_page_number }}">Next</a>{% endif %}
+    </div>
+  </div>
+{% endblock %}

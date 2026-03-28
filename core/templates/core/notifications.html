@@ -1,0 +1,29 @@
+{% extends 'core/base.html' %}
+{% block content %}
+  <div class="section-title">
+    <h2>Notifications</h2>
+    <p>Your latest appointment, billing, and workflow updates appear here and refresh automatically.</p>
+    <span class="live-pill">Live sync enabled</span>
+  </div>
+  <div class="card" data-notification-panel>
+    <div class="table-toolbar">
+      <div class="summary-hint">Unread updates sync live while you stay on this page.</div>
+      <button type="button" class="btn btn-outline" data-notification-read-all>Mark All Read</button>
+    </div>
+    <div class="notification-list" data-notification-list>
+      {% for n in notifications %}
+      <div class="notification-item {% if n.is_read %}is-read{% endif %}" data-notification-id="{{ n.id }}">
+        <div>
+          <strong>{{ n.message }}</strong>
+          <div class="summary-hint">{{ n.created_at|date:"M d, Y H:i" }}</div>
+        </div>
+        {% if not n.is_read %}
+        <button type="button" class="btn btn-outline notification-action" data-notification-read="{% url 'notification_read_api' n.id %}">Mark Read</button>
+        {% endif %}
+      </div>
+      {% empty %}
+      <div class="notification-empty" data-notification-empty>No notifications</div>
+      {% endfor %}
+    </div>
+  </div>
+{% endblock %}
