@@ -92,7 +92,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'hospitalms.wsgi.application'
 ASGI_APPLICATION = 'hospitalms.asgi.application'
 
-DATABASE_URL = os.environ.get('DATABASE_URL', '').strip()
+DATABASE_URL = os.environ.get('DATABASE_URL', '').strip() or os.environ.get('MYSQL_URL', '').strip()
 USE_DATABASE_URL = DATABASE_URL and HAS_DJ_DATABASE_URL and (IS_RENDER or not is_internal_railway_url(DATABASE_URL))
 if USE_DATABASE_URL:
     DATABASES = {

@@ -76,6 +76,30 @@ This project is prepared for Render with:
 - Uploaded files like reports and payment proofs will not be permanent unless you use cloud media storage.
 - This project now supports optional Cloudinary media storage through `CLOUDINARY_URL`.
 
+## Railway Deployment
+
+This project can also run on Railway with a Railway MySQL service.
+
+### Steps
+1. Create a new Railway project.
+2. Add a MySQL service in Railway.
+3. Add your Django app service from GitHub.
+4. In the app service variables, set:
+   - `DJANGO_SECRET_KEY`
+   - `DJANGO_DEBUG=False`
+   - `EMAIL_HOST_USER`
+   - `EMAIL_HOST_PASSWORD`
+5. For database connection, set either:
+   - `DATABASE_URL=${{MySQL.MYSQL_URL}}`
+   - or `MYSQL_URL=${{MySQL.MYSQL_URL}}`
+
+The app now supports both `DATABASE_URL` and Railway-style `MYSQL_URL`.
+
+### Railway Note
+- Railway internal MySQL hosts like `*.railway.internal` work from Railway services.
+- They do not work directly from your local laptop.
+- Local development should use local SQLite or local MySQL instead.
+
 ## Gmail SMTP Notes
 - Enable 2-Step Verification on Gmail account.
 - Create an App Password and use it as `EMAIL_HOST_PASSWORD`.
